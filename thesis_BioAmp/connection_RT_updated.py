@@ -38,7 +38,7 @@ async def notification_handler(sender, data):
         # Update data for plotting
         for f in floats:
             amplitudes.append(f)
-            sample_count = len(amplitudes)
+            sample_count +=1
 
 
 async def main():
@@ -47,25 +47,30 @@ async def main():
     plt.ion()  # Turn on interactive mode
 
     client = BleakClient(device_address)
-    try:
-        if client.is_connected:
-            print(f"Connected to device with MAC address: {client.address}")
 
-            # Enable notifications for the raw characteristic
-            await client.start_notify(raw_characteristic_uuid, notification_handler)
-
-            # Enable notifications for the filtered characteristic
-            await client.start_notify(filtered_characteristic_uuid, notification_handler)
-
-            # Keep receiving data and plot periodically
-            while True:
-                await asyncio.sleep(0.1)  # Wait for data without interfering with the reception    
-                await plot_data()                
+    await client.connect()
+    if client.is_connected:
+        print(f"Connected to device with MAC address: {client.address}")
             
-    except Exception as e:
-       print(f"Error: {e}")
-    finally:
-        plt.show()  # Display the plot window after disconnecting
+        # Enable notifications for the raw characteristic
+        #await client.start_notify(raw_characteristic_uuid, notification_handler)
 
-# Run the main function
-asyncio.run(main())
+        # Enable notifications for the filtered characteristic
+        await client.start_notify(filtered_characteristic_uuid, notification_handler)
+        
+        while(client.is_connected):
+            # Keep receiving data and plot periodically
+            try:
+                plot_data() 
+            except Exception as e:
+                print(f"Error: {e}")
+            await asyncio.sleep(0.1)  # Wait for data without interfering with the reception                    
+        while(True):
+            await asyncio.sleep(0.1)
+
+if __name__ == '__main__':
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print('\n\n *** Interrupted.\n')
+        exit()
