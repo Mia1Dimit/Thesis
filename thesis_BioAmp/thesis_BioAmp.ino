@@ -1,10 +1,10 @@
 #include <ArduinoBLE.h>
 
 #define BUFFER_SIZE 52 // Number of float values per packet
-#define TOTAL_SAMPLES 1560 // Total number of float values to capture
+#define TOTAL_SAMPLES 2080 // Total number of float values to capture
 #define PACKET_SIZE 208 // Size of one packet in bytes
 #define NUM_PACKETS (TOTAL_SAMPLES / BUFFER_SIZE) // Total number of packets
-#define SAMPLE_RATE 500
+#define SAMPLE_RATE 1000
 #define BAUD_RATE 115200
 #define INPUT_PIN A0
 
@@ -24,8 +24,7 @@ unsigned long startTime, endTime;
 
 void setup() {
   Serial.begin(BAUD_RATE);
-  while (!Serial)
-    ;
+  while (!Serial);
   Serial.println("ime edw");
 
   // begin initialization
@@ -73,6 +72,7 @@ void setup() {
 void loop() {
   // listen for Bluetooth® Low Energy peripherals to connect:
   BLEDevice central = BLE.central();
+  //Serial.println("waiting");
 
   // if a central is connected to peripheral:
   if (central) {
