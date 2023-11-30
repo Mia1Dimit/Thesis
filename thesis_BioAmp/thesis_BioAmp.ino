@@ -80,8 +80,8 @@ void loop() {
     // print the central's MAC address:
     Serial.println(central.address());
 
-    // Introduce a 5-second delay after connection before sending data
-    delay(5000);
+    // Introduce a 3-second delay after connection before sending data
+    delay(3000);
 
     // while the central is still connected to peripheral:
     while (central.connected()) {
@@ -118,13 +118,6 @@ void processEMGData() {
       if (bufferIndex >= TOTAL_SAMPLES) {
         bufferIndex = 0; // Reset buffer index
         capturingData = false; // Stop data capture
-
-        // Measure the time taken by sendPackets for rawBuffer
-        //startTime = millis();
-        //sendPackets(rawBuffer, TOTAL_SAMPLES, EMG_Raw_Characteristic);
-        //endTime = millis();
-        //Serial.print("Time taken by sendPackets (Raw): ");
-        //Serial.println(endTime - startTime);
 
         // Measure the time taken by sendPackets for filteredBuffer
         startTime = millis();
