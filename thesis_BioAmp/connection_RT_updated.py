@@ -4,7 +4,6 @@ import struct
 import matplotlib.pyplot as plt
 
 device_address = 'f4:12:fa:63:47:29'
-raw_characteristic_uuid = "b817f6da-8796-11ee-b9d1-0242ac120002"
 filtered_characteristic_uuid = "a3b1a544-8794-11ee-b9d1-0242ac120002"
 
 # Initialize variables for received data and plotting
@@ -21,9 +20,8 @@ def plot_data():
     plt.xlabel('Number of Samples')
     plt.ylabel('EMG Amplitude')
     plt.title('Real-time EMG Data')
-    plt.ylim(-200.0,200.0)  # Set fixed limits for y-axis
-    plt.xlim(max(0, sample_count - window_size), sample_count)  # Fix x-axis range to 3120 values
-    plt.show(block=False)
+    plt.ylim(-500.0, 500.0)  # Set fixed limits for y-axis
+    plt.xlim(start_index, end_index)  # Fix x-axis range to 3120 values
     plt.pause(0.01)
 
 # Notification handler to receive data
@@ -38,12 +36,14 @@ async def notification_handler(sender, data):
         # Update data for plotting
         for f in floats:
             amplitudes.append(f)
-            sample_count +=1
+            sample_count =len(amplitudes)
 
+async def plot_handler():
+    while True:
+        plot_data()
+        await asyncio.sleep(0.1)  
 
 async def main():
-    global received_data
-
     plt.ion()  # Turn on interactive mode
 
     client = BleakClient(device_address)
@@ -52,21 +52,11 @@ async def main():
     if client.is_connected:
         print(f"Connected to device with MAC address: {client.address}")
             
-        # Enable notifications for the raw characteristic
-        #await client.start_notify(raw_characteristic_uuid, notification_handler)
-
         # Enable notifications for the filtered characteristic
         await client.start_notify(filtered_characteristic_uuid, notification_handler)
-        
-        while(client.is_connected):
-            # Keep receiving data and plot periodically
-            try:
-                plot_data() 
-            except Exception as e:
-                print(f"Error: {e}")
-            await asyncio.sleep(0.1)  # Wait for data without interfering with the reception                    
-        while(True):
-            await asyncio.sleep(0.1)
+
+        # Concurrently run notification handling and plotting
+        await asyncio.gather(plot_handler(), asyncio.sleep(0))  
 
 if __name__ == '__main__':
     try:
