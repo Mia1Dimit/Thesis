@@ -1,10 +1,13 @@
 import asyncio
-from bleak import BleakClient
+from bleak import BleakClient,BleakError
 import struct
 import matplotlib.pyplot as plt
 
+device_address = 'f4:12:fa:63:47:29'
+filtered_characteristic_uuid = "a3b1a544-8794-11ee-b9d1-0242ac120002"
+
 class RealTimePlotter:
-    def __init__(self, window_size=3120):
+    def __init__(self, window_size=1500):
         self.received_data = bytearray()
         self.amplitudes = []
         self.sample_count = 0
@@ -22,7 +25,7 @@ class RealTimePlotter:
     def set_data_and_plot(self):
         start_index = max(0, self.sample_count - self.window_size)
         end_index = min(self.sample_count, start_index + self.window_size)
-        self.line.set_data(range(start_index, end_index), self.amplitudes[start_index:end_index])
+        self.line.set_data(range(0, end_index), self.amplitudes[0:end_index])
         self.ax.set_xlim(start_index, end_index)
         plt.pause(0.01)
 
@@ -36,6 +39,7 @@ class RealTimePlotter:
             self.sample_count = len(self.amplitudes)
             
 
+
 async def notification_handler_wrapper(sender, data, plotter):
     await notification_handler(sender, data, plotter)
 
@@ -46,11 +50,8 @@ async def plot_handler(plotter):
     while True:
         plotter.set_data_and_plot()
         await asyncio.sleep(0.1)
-
-async def main():
-    device_address = 'f4:12:fa:63:47:29'
-    filtered_characteristic_uuid = "a3b1a544-8794-11ee-b9d1-0242ac120002"
     
+async def main():    
     plotter = RealTimePlotter()
 
     client = BleakClient(device_address)
@@ -58,7 +59,7 @@ async def main():
     await client.connect()
     if client.is_connected:
         print(f"Connected to device with MAC address: {client.address}")
-        
+         
         # Enable notifications for the filtered characteristic
         await client.start_notify(filtered_characteristic_uuid, 
                                   lambda sender, data: asyncio.ensure_future(notification_handler_wrapper(sender, data, plotter)))
